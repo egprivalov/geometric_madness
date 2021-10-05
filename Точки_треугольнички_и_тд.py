@@ -4,6 +4,33 @@ from random import randint
 def toFixed(numObj, digits=0):
     return f"{numObj:.{digits}f}"
 
+def isCrossed(a,b,c,d):
+    #Первый отрезок
+    x1_1=a.x
+    y1_1=a.y
+    x1_2 = b.x
+    y1_2 = b.y
+    #Второй отрезок
+    x2_1 = c.x
+    y2_1 = c.y
+    x2_2 = d.x
+    y2_2 = d.y
+
+    A1 = y1_1 - y1_2
+    B1 = x1_2 - x1_1
+    C1 = x1_1 * y1_2 - x1_2 * y1_1
+    A2 = y2_1 - y2_2
+    B2 = x2_2 - x2_1
+    C2 = x2_1 * y2_2 - x2_2 * y2_1
+    if B1 * A2 - B2 * A1 != 0:
+        y = (C2 * A1 - C1 * A2) / (B1 * A2 - B2 * A1)
+        x = (-C1 - B1 * y) / A1
+        if min(x1_1, x1_2) <= x <= max(x1_1, x1_2) and \
+                min(y1_1, y1_2) <= y <= max(y1_1, y1_2):
+                return(True)
+        else:
+            return(False)
+
 class Figure():
     def __init__(self):
         self.plosh=self.ploshad()
@@ -41,9 +68,13 @@ class Triangle(Figure):
     def ShowClass(self):
         return("Треугольник")
 
-class Rectangle(Figure):
+class Quadrangle(Figure):
     def __init__(self, a, b, c, d):
-        self.corners=[a,b,c,d]
+        self.corners=sorted([a,b,c,d],key=lambda x: x.x)
+        if isCrossed(self.corners[0],self.corners[1],self.corners[2],self.corners[3]):
+            self.corners[2],self.corners[1]=self.corners[1],self.corners[2]
+        elif isCrossed(self.corners[0],self.corners[3],self.corners[1],self.corners[2]):
+            self.corners[2], self.corners[3] = self.corners[3], self.corners[2]
         self.sides=[float(toFixed(sqrt((b.x-a.x)**2+(b.y-a.y)**2), accuracy)),
                     float(toFixed(sqrt((c.x-b.x)**2+(c.y-b.y)**2), accuracy)),
                     float(toFixed(sqrt((d.x-c.x)**2+(d.y-c.y)**2), accuracy)),
@@ -53,9 +84,9 @@ class Rectangle(Figure):
     def perimetr(self):
         return (float(toFixed(sum(self.sides), accuracy)))
     def ploshad(self):
-        return (float(toFixed(self.sides[0]*self.sides[1],accuracy)))
+        return (float(toFixed(min(Triangle(self.corners[0], self.corners[1],self.corners[3]).ploshad()+Triangle(self.corners[2], self.corners[1],self.corners[3]).ploshad(), Triangle(self.corners[0], self.corners[1],self.corners[2]).ploshad()+Triangle(self.corners[2], self.corners[0],self.corners[3]).ploshad()),accuracy)))
     def ShowClass(self):
-        return("Прямоугольник")
+        return("Четырехугольник")
 
 class Circle(Figure):
     def __init__(self,centr, R):
@@ -80,21 +111,18 @@ def CreateRandomTriangle(A):
     print("Треугольник создан")
     return (A[-1])
 
-def CreateRectangle(A,a_point, b_point, c_point, d_point):
-    A.append(Rectangle(a_point, b_point, c_point, d_point))
+def CreateQuadrangle(A,a_point, b_point, c_point, d_point):
+    A.append(Quadrangle(a_point, b_point, c_point, d_point))
     print("Прямоугольник создан")
     return (A[-1])
 
-def CreateRandomRectangle(A):
+def CreateRandomQuadrangle(A):
     a_point=Point(randint(-100, 100), randint(-100, 100))
-    angle=randint(0,90)
-    side_1=randint(0,100)
-    side_2=randint(0,100)
-    b_point=Point(float(toFixed(a_point.x+side_1*cos(angle),accuracy)),float(toFixed(a_point.y+side_1*sin(angle),accuracy)))
-    c_point=Point(float(toFixed(b_point.x+side_2*cos(90-angle), accuracy)),float(toFixed(b_point.y-side_2*sin(90-angle),accuracy)))
-    d_point=Point(float(toFixed(a_point.x-b_point.x+c_point.x,accuracy)), float(toFixed(a_point.y+c_point.y-b_point.y,accuracy)))
-    A.append(Rectangle(a_point, b_point, c_point, d_point))
-    print("Прямоугольник создан")
+    b_point=Point(randint(-100, 100), randint(-100, 100))
+    c_point=Point(randint(-100, 100), randint(-100, 100))
+    d_point=Point(randint(-100, 100), randint(-100, 100))
+    A.append(Quadrangle(a_point, b_point, c_point, d_point))
+    print("Четырехугольник создан")
     return (A[-1])
 
 def CreateCircle(A, centr, R):
@@ -115,7 +143,7 @@ if __name__ == '__main__':
     while k:
         k = int(input("\nВыберите действие:\n"
                       "Для создания треугольника-введите 1\n"
-                      "Для создания прямоугольника-введите 2\n"
+                      "Для создания четырехугольника-введите 2\n"
                       "Для создания круга-введите 3\n"
                       "Для вывода списка фигур-введите 4\n"
                       "Для вывода площади и периметра фигуры-введите 5\n"
@@ -136,16 +164,16 @@ if __name__ == '__main__':
                 CreateTriangle(figures, Point(x1,y1), Point(x2,y2), Point(x3,y3))
 
         elif k==2:
-            key = int(input("\nДля создания прямоугольника по заданным координатам-введите 1\n"
-                            "Для создания случайного пряумоугольника-введите 2\n"))
+            key = int(input("\nДля создания четырехугольника по заданным координатам-введите 1\n"
+                            "Для создания случайного четырехугольника-введите 2\n"))
             if key - 1:
-                CreateRandomRectangle(figures)
+                CreateRandomQuadrangle(figures)
             else:
                 x1,y1=map(float, input("Введите координаты первой точки: ").split())
                 x2,y2=map(float, input("Введите координаты второй точки: ").split())
                 x3,y3=map(float, input("Введите координаты третьей точки: ").split())
                 x4, y4 = map(float, input("Введите координаты четвертой точки: ").split())
-                CreateRectangle(figures, Point(x1,y1), Point(x2,y2), Point(x3,y3), Point(x4,y4))
+                CreateQuadrangle(figures, Point(x1,y1), Point(x2,y2), Point(x3,y3), Point(x4,y4))
 
         elif k==3:
             key = int(input("\nДля создания круга по заданным координатам-введите 1\n"
@@ -159,11 +187,11 @@ if __name__ == '__main__':
 
         elif k==4:
             for i in range(len(figures)):
-                print(f"{i+1}-я фигура:\n    {figures[i].ShowClass()}")
+                print("\n"f"{i+1}-я фигура:\n    {figures[i].ShowClass()}")
                 if figures[i].ShowClass()=="Треугольник":
                     for j in range(3):
                         print(f"{j+1}-я точка: ({figures[i].corners[j].x}, {figures[i].corners[j].y})")
-                elif figures[i].ShowClass()=="Прямоугольник":
+                elif figures[i].ShowClass()=="Четырехугольник":
                     for j in range(4):
                         print(f"{j+1}-я точка: {figures[i].corners[j].x,figures[i].corners[j].y}")
                 elif figures[i].ShowClass()=="Круг":
